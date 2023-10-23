@@ -41,7 +41,7 @@ class LinearRegression:
         return df
 
 
-    def _gradient_descent(self, X, Y, learning_rate, num_iterations, convergence_threshold=0.001) -> tuple:
+    def _gradient_descent(self, X, Y, learning_rate, num_iterations, convergence_threshold=0.01) -> tuple:
         """
         Perform gradient descent to optimize model parameters.
 
@@ -110,9 +110,13 @@ class LinearRegression:
         df = self._read_file()
 
         # Normilize mileage
-        self.mean_km = df['km'].mean()
-        self.std_km = df['km'].std()
-        df['km'] = (df['km'] - self.mean_km) / self.std_km
+        try:
+            self.mean_km = df['km'].mean()
+            self.std_km = df['km'].std()
+            df['km'] = (df['km'] - self.mean_km) / self.std_km
 
-        self.theta0, self.theta1 = self._gradient_descent(df['km'], df['price'], learning_rate=learning_rate, num_iterations=num_iterations)
+            self.theta0, self.theta1 = self._gradient_descent(df['km'], df['price'], learning_rate=learning_rate, num_iterations=num_iterations)
+        except KeyError as e:
+            print(f"Error: The fit function lookings for column name {e}")
+            exit(1)
         self._save_result()
