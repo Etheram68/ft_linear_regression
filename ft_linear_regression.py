@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from Class.LinearRegression import LinearRegression
+from ai.LinearRegression import LinearRegression
 
 
 def main():
