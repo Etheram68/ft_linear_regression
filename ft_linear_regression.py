@@ -4,6 +4,16 @@ from ai.LinearRegression import LinearRegression
 
 
 def main():
+    """
+    Main function to train a linear regression prediction model using the provided dataset.
+
+    Command-line arguments:
+    - --file (str): Path to the dataset file (default="data/data.csv").
+    - --learning-rate (float): Learning rate for gradient descent (default=0.001).
+    - --num_iterations (int): Number of iterations for gradient descent (default=2000).
+
+    Trains a linear regression model using the specified dataset and hyperparameters.
+    """
     parser = argparse.ArgumentParser(description="Execute this programe for train new prediction model")
     parser.add_argument("--file", type=str, default="data/data.csv", help="Path to dataset file (default=data.csv)")
     parser.add_argument("--learning-rate", type=float, default="0.001", help="Set learning rate (default=0.01)")
