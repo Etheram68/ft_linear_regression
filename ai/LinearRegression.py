@@ -5,17 +5,10 @@ import matplotlib.pyplot as plt
 class LinearRegression:
     def __init__(self, file):
         """
-        Initialize the LinearRegression model with a dataset file path and initial parameter values.
+        Initialize a LinearRegression object.
 
-        Parameters:
-        - file (str): Path to the dataset file.
-
-        Attributes:
-        - file (str): Path to the dataset file.
-        - theta0 (float): Intercept parameter.
-        - theta1 (float): Slope parameter.
-        - mean_km (float): Mean value of the 'km' feature for normalization.
-        - std_km (float): Standard deviation of the 'km' feature for normalization.
+        Args:
+        file (str): The file path to the dataset.
         """
         self.file = file
         self.theta0 = 0
@@ -25,15 +18,12 @@ class LinearRegression:
         self.cost_history = []
 
 
-    def _read_file(self) -> pd.DataFrame:
+    def read_file(self) -> pd.DataFrame:
         """
-        Read the dataset from the specified file into a pandas DataFrame.
+        Read the dataset from the specified file.
 
         Returns:
-        - df (pd.DataFrame): The dataset as a DataFrame.
-
-        Raises:
-        - pd.errors.EmptyDataError: If the file is empty.
+        pd.DataFrame: The dataset as a Pandas DataFrame.
         """
         try:
             df = pd.read_csv(self.file)
@@ -43,23 +33,33 @@ class LinearRegression:
         return df
 
 
-    def _gradient_descent(self, X, Y, learning_rate, num_iterations) -> tuple:
+    def normalize_features(self, df) -> pd.DataFrame:
         """
-        Perform gradient descent to optimize model parameters.
+        Normalize the 'km' feature in the dataset.
 
-        Parameters:
-        - X (list): Feature data.
-        - Y (list): Target data.
-        - learning_rate (float): Step size for gradient descent.
-        - num_iterations (int): Maximum number of iterations.
-        - convergence_threshold (float, optional): Threshold for convergence.
+        Args:
+        df (pd.DataFrame): The dataset as a Pandas DataFrame.
 
         Returns:
-        - (theta0, theta1) (tuple): Optimized parameters (intercept and slope).
+        pd.DataFrame: The dataset with normalized 'km' feature.
+        """
+        self.mean_km = df['km'].mean()
+        self.std_km = df['km'].std()
+        df['km'] = (df['km'] - self.mean_km) / self.std_km
+        return df
 
-        Description:
-        This function iteratively updates the model parameters using gradient descent
-        until convergence or the maximum number of iterations is reached.
+    def gradient_descent(self, X, Y, learning_rate, num_iterations) -> tuple:
+        """
+        Perform gradient descent to find the linear regression parameters.
+
+        Args:
+        X (pd.Series): The feature (normalized 'km') values.
+        Y (pd.Series): The target (price) values.
+        learning_rate (float): The learning rate for gradient descent.
+        num_iterations (int): The number of iterations to run gradient descent.
+
+        Returns:
+        tuple: A tuple containing the optimized theta0 and theta1 values.
         """
         n = float(len(X))
         theta0 = 0
@@ -67,23 +67,20 @@ class LinearRegression:
         self.cost_history = np.zeros(num_iterations)
 
         for _ in range(num_iterations):
-            Y_pred = [theta0 + theta1 * x for x in X]
-            D_theta0 = (-2/n) * sum(Y[i] - Y_pred[i] for i in range(len(Y)))
-            D_theta1 = (-2/n) * sum(X[i] * (Y[i] - Y_pred[i]) for i in range(len(X)))
+            Y_pred = theta0 + theta1 * X
+            D_theta0 = (-2/n) * sum(Y - Y_pred)
+            D_theta1 = (-2/n) * sum(X * (Y - Y_pred))
 
             theta0 = theta0 - learning_rate * D_theta0
             theta1 = theta1 - learning_rate * D_theta1
 
-            self.cost_history[_] = sum([data**2 for data in (Y_pred - Y)]) / (2 * n)
+            self.cost_history[_] = sum((Y_pred - Y) ** 2) / (2 * n)
         return theta0, theta1
 
 
-    def _save_result(self) -> None:
+    def save_result(self) -> None:
         """
-        Save the model's parameters (theta0, theta1, mean_km, and std_km) to a file called "thetas".
-
-        Raises:
-        - IOError: If an error occurs while writing to the file.
+        Save the results (theta0, theta1, mean_km, std_km) to a file.
         """
         try:
             with open("thetas", "w") as file:
@@ -95,61 +92,65 @@ class LinearRegression:
 
     def display_result(self, cpy_km, df, num_iterations) -> None:
         """
-        Display the results of a linear regression and the cost function's progress during gradient descent.
+        Display the results of linear regression and the cost function graph.
 
-        Parameters:
-        - self: Instance of the class containing this method.
-        - cpy_km: A sequence of data representing the values of kilometers for display.
-        - df: A DataFrame or data structure containing the 'price' and 'km' data used in the regression.
-        - num_iterations: The number of iterations of gradient descent for which the cost history should be displayed.
-
-        This function generates two plots:
-        1. A scatter plot displaying the data points with the linear regression line.
-        2. A line plot showing the cost function's progress over the specified number of iterations during gradient descent.
-
-        The first plot provides a visual representation of how well the linear regression fits the data, with the red line representing the regression line.
-
-        The second plot displays the cost function's values over the course of gradient descent iterations, helping to visualize the optimization process.
-
-        Note: This function uses the matplotlib library to create the plots.
-
-        Returns:
-        None
+        Args:
+        cpy_km (pd.Series): A copy of the 'km' feature values.
+        df (pd.DataFrame): The dataset as a Pandas DataFrame.
+        num_iterations (int): The number of iterations used in gradient descent.
         """
         plt.figure(1)
         plt.title("Result of linear regression")
         plt.scatter(cpy_km, df['price'])
         plt.plot(cpy_km, self.theta0 + self.theta1 * df['km'], color='red')
+        plt.xlabel('km')
+        plt.ylabel('price')
+        plt.legend(['Data Points', 'Linear Regression'])
         plt.figure(2)
         plt.title("Cost function, gradient descent")
         plt.plot(range(num_iterations), self.cost_history)
+        plt.xlabel('Iteration')
+        plt.ylabel('Cost')
         plt.show()
 
 
+    def determination_coef(self, y, pred) -> float:
+        """
+        Calculate the determination coefficient (R-squared).
+
+        Args:
+        y (pd.Series): The actual target values.
+        pred (pd.Series): The predicted target values.
+
+        Returns:
+        float: The determination coefficient (R-squared) value.
+        """
+        u = ((y - pred) ** 2).sum()
+        v = ((y - y.mean()) ** 2).sum()
+        return 1 - (u / v)
+
     def fit(self, learning_rate, num_iterations, graph) -> None:
         """
-        Train the linear regression model using gradient descent.
+        Fit the linear regression model to the dataset.
 
-        Parameters:
-        - learning_rate (float): Step size for gradient descent.
-        - num_iterations (int): Maximum number of iterations.
+        Args:
+        learning_rate (float): The learning rate for gradient descent.
+        num_iterations (int): The number of iterations to run gradient descent.
+        graph (bool): Whether to display the results graph.
 
-        Description:
-        This function reads the dataset, normalizes the 'km' feature, and then uses gradient descent
-        to optimize the model's parameters. It saves the parameters to a file.
         """
-        df = self._read_file()
+        df = self.read_file()
 
         try:
             cpy_km = df['km'].copy()
-            self.mean_km = df['km'].mean()
-            self.std_km = df['km'].std()
-            df['km'] = (df['km'] - self.mean_km) / self.std_km
+            df = self.normalize_features(df)
 
-            self.theta0, self.theta1 = self._gradient_descent(df['km'], df['price'], learning_rate=learning_rate, num_iterations=num_iterations)
+            self.theta0, self.theta1 = self.gradient_descent(df['km'], df['price'], learning_rate=learning_rate, num_iterations=num_iterations)
+            determination_coef = self.determination_coef(df['price'], self.theta0 + self.theta1 * df['km'])
+            print(f"Determination coefficient: {determination_coef}")
             if graph:
                 self.display_result(cpy_km, df, num_iterations)
         except KeyError as e:
             print(f"Error: The fit function lookings for column name {e}")
             exit(1)
-        self._save_result()
+        self.save_result()
