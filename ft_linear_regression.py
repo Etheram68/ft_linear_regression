@@ -16,8 +16,9 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Execute this programe for train new prediction model")
     parser.add_argument("--file", type=str, default="data/data.csv", help="Path to dataset file (default=data.csv)")
-    parser.add_argument("--learning-rate", type=float, default="0.05", help="Set learning rate (default=0.05)")
-    parser.add_argument("--num_iterations", type=int, default="2000", help="Set number iterations gradient Descent (default=2000)")
+    parser.add_argument("--learning-rate", type=float, default="0.005", help="Set learning rate (default=0.05)")
+    parser.add_argument("--num_iterations", type=int, default="500", help="Set number iterations gradient Descent (default=2000)")
+    parser.add_argument("--graph", action="store_true", help="Display graph of cost function")
 
     args = parser.parse_args()
     file = Path(args.file)
@@ -28,7 +29,7 @@ def main():
         print(f"File {file} doesn't exist")
         exit(1)
 
-    lr.fit(learning_rate=args.learning_rate, num_iterations=args.num_iterations)
+    lr.fit(learning_rate=args.learning_rate, num_iterations=args.num_iterations, graph=args.graph)
 
 if __name__ == "__main__":
     main()

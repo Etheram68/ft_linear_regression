@@ -1,5 +1,6 @@
 import pandas as pd
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 class LinearRegression:
     def __init__(self, file):
@@ -21,6 +22,7 @@ class LinearRegression:
         self.theta1 = 0
         self.mean_km = 0
         self.std_km = 0
+        self.cost_history = []
 
 
     def _read_file(self) -> pd.DataFrame:
@@ -41,7 +43,7 @@ class LinearRegression:
         return df
 
 
-    def _gradient_descent(self, X, Y, learning_rate, num_iterations, convergence_threshold=0.01) -> tuple:
+    def _gradient_descent(self, X, Y, learning_rate, num_iterations) -> tuple:
         """
         Perform gradient descent to optimize model parameters.
 
@@ -62,21 +64,17 @@ class LinearRegression:
         n = float(len(X))
         theta0 = 0
         theta1 = 0
+        self.cost_history = np.zeros(num_iterations)
 
         for _ in range(num_iterations):
             Y_pred = [theta0 + theta1 * x for x in X]
             D_theta0 = (-2/n) * sum(Y[i] - Y_pred[i] for i in range(len(Y)))
             D_theta1 = (-2/n) * sum(X[i] * (Y[i] - Y_pred[i]) for i in range(len(X)))
 
-            new_theta0 = theta0 - learning_rate * D_theta0
-            new_theta1 = theta1 - learning_rate * D_theta1
+            theta0 = theta0 - learning_rate * D_theta0
+            theta1 = theta1 - learning_rate * D_theta1
 
-            diff = abs(new_theta0 - theta0) + abs(new_theta1 - theta1)
-            if diff < convergence_threshold:
-                break
-
-            theta0 = new_theta0
-            theta1 = new_theta1
+            self.cost_history[_] = sum([data**2 for data in (Y_pred - Y)]) / (2 * n)
         return theta0, theta1
 
 
@@ -95,7 +93,40 @@ class LinearRegression:
             exit(1)
 
 
-    def fit(self, learning_rate, num_iterations) -> None:
+    def display_result(self, cpy_km, df, num_iterations) -> None:
+        """
+        Display the results of a linear regression and the cost function's progress during gradient descent.
+
+        Parameters:
+        - self: Instance of the class containing this method.
+        - cpy_km: A sequence of data representing the values of kilometers for display.
+        - df: A DataFrame or data structure containing the 'price' and 'km' data used in the regression.
+        - num_iterations: The number of iterations of gradient descent for which the cost history should be displayed.
+
+        This function generates two plots:
+        1. A scatter plot displaying the data points with the linear regression line.
+        2. A line plot showing the cost function's progress over the specified number of iterations during gradient descent.
+
+        The first plot provides a visual representation of how well the linear regression fits the data, with the red line representing the regression line.
+
+        The second plot displays the cost function's values over the course of gradient descent iterations, helping to visualize the optimization process.
+
+        Note: This function uses the matplotlib library to create the plots.
+
+        Returns:
+        None
+        """
+        plt.figure(1)
+        plt.title("Result of linear regression")
+        plt.scatter(cpy_km, df['price'])
+        plt.plot(cpy_km, self.theta0 + self.theta1 * df['km'], color='red')
+        plt.figure(2)
+        plt.title("Cost function, gradient descent")
+        plt.plot(range(num_iterations), self.cost_history)
+        plt.show()
+
+
+    def fit(self, learning_rate, num_iterations, graph) -> None:
         """
         Train the linear regression model using gradient descent.
 
@@ -109,13 +140,15 @@ class LinearRegression:
         """
         df = self._read_file()
 
-        # Normilize mileage
         try:
+            cpy_km = df['km'].copy()
             self.mean_km = df['km'].mean()
             self.std_km = df['km'].std()
             df['km'] = (df['km'] - self.mean_km) / self.std_km
 
             self.theta0, self.theta1 = self._gradient_descent(df['km'], df['price'], learning_rate=learning_rate, num_iterations=num_iterations)
+            if graph:
+                self.display_result(cpy_km, df, num_iterations)
         except KeyError as e:
             print(f"Error: The fit function lookings for column name {e}")
             exit(1)
