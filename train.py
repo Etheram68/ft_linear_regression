@@ -9,8 +9,8 @@ def main():
 
     Command-line arguments:
     - --file (str): Path to the dataset file (default="data/data.csv").
-    - --learning-rate (float): Learning rate for gradient descent (default=0.001).
-    - --num_iterations (int): Number of iterations for gradient descent (default=2000).
+    - --learning-rate (float): Learning rate for gradient descent (default=0.005).
+    - --num_iterations (int): Number of iterations for gradient descent (default=500).
 
     Trains a linear regression model using the specified dataset and hyperparameters.
     """
