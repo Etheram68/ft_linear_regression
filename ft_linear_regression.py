@@ -16,8 +16,8 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Execute this programe for train new prediction model")
     parser.add_argument("--file", type=str, default="data/data.csv", help="Path to dataset file (default=data.csv)")
-    parser.add_argument("--learning-rate", type=float, default="0.005", help="Set learning rate (default=0.05)")
-    parser.add_argument("--num_iterations", type=int, default="500", help="Set number iterations gradient Descent (default=2000)")
+    parser.add_argument("--learning-rate", type=float, default="0.005", help="Set learning rate (default=0.005)")
+    parser.add_argument("--num_iterations", type=int, default="500", help="Set number iterations gradient Descent (default=500)")
     parser.add_argument("--graph", action="store_true", help="Display graph of cost function")
 
     args = parser.parse_args()
